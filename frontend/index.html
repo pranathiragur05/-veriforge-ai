@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>VeriForge AI</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            font-size: 16px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        button:disabled {
+            background: #888;
+            cursor: not-allowed;
+        }
+
+        #loading {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #eee;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #result {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .card {
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 10px;
+            background: #f5f5f5;
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+
+        #answer {
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        #error {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #ffe5e5;
+            border-radius: 10px;
+            color: #b00000;
+            white-space: pre-wrap;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>VeriForge AI</h1>
+
+    <div class="subtitle">
+        Multi-Agent AI Reasoning & Verification Engine
+    </div>
+
+
+    <textarea
+        id="task"
+        placeholder="Enter your task..."
+    >explain ai</textarea>
+
+
+    <button id="runButton">
+        Run Verification
+    </button>
+
+
+    <div id="loading">
+
+        <strong>Agents are working...</strong>
+
+        <br><br>
+
+        Planner → Researcher → Coder → Verifier
+        → Critic → Risk Detector → Finalizer
+
+    </div>
+
+
+    <div id="error"></div>
+
+
+    <div id="result">
+
+        <div class="card">
+
+            <h3>Final Answer</h3>
+
+            <div id="answer"></div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Verification Status</h3>
+
+            <div id="verification" class="status"></div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Critic Risk</h3>
+
+            <div id="criticRisk" class="status"></div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Detected Risk</h3>
+
+            <div id="detectedRisk" class="status"></div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Correction Attempts</h3>
+
+            <div id="attempts"></div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Final Status</h3>
+
+            <div id="finalStatus" class="status"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const button = document.getElementById("runButton");
+
+
+button.addEventListener("click", runVerification);
+
+
+async function runVerification() {
+
+    const task =
+        document.getElementById("task").value.trim();
+
+    const loading =
+        document.getElementById("loading");
+
+    const result =
+        document.getElementById("result");
+
+    const error =
+        document.getElementById("error");
+
+
+    if (!task) {
+
+        alert("Please enter a task.");
+
+        return;
+
+    }
+
+
+    loading.style.display = "block";
+
+    result.style.display = "none";
+
+    error.style.display = "none";
+
+    button.disabled = true;
+
+    button.innerText = "Running...";
+
+
+    try {
+
+        console.log("Sending task to backend:");
+
+        console.log(task);
+
+
+        const response = await fetch(
+            "/run",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    task: task
+                })
+            }
+        );
+
+
+        console.log(
+            "HTTP Status:",
+            response.status
+        );
+
+
+        const text =
+            await response.text();
+
+
+        console.log(
+            "Backend response:",
+            text
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Backend returned HTTP " +
+                response.status +
+                "\n\n" +
+                text
+            );
+
+        }
+
+
+        const data =
+            JSON.parse(text);
+
+
+        console.log(
+            "Parsed data:",
+            data
+        );
+
+
+        document.getElementById("answer").innerText =
+            data.answer ||
+            "No final answer was produced.";
+
+
+        document.getElementById("verification").innerText =
+            data.verification ||
+            "Unknown";
+
+
+        document.getElementById("criticRisk").innerText =
+            data.critic_risk ||
+            "Unknown";
+
+
+        document.getElementById("detectedRisk").innerText =
+            data.detected_risk ||
+            "Unknown";
+
+
+        document.getElementById("attempts").innerText =
+            data.attempts ?? "Unknown";
+
+
+        document.getElementById("finalStatus").innerText =
+            data.final_status ||
+            "Unknown";
+
+
+        result.style.display = "block";
+
+
+    }
+
+    catch (err) {
+
+        console.error(
+            "Frontend error:",
+            err
+        );
+
+
+        error.style.display = "block";
+
+
+        error.innerText =
+            "Error:\n\n" +
+            err.message;
+
+    }
+
+    finally {
+
+        loading.style.display = "none";
+
+        button.disabled = false;
+
+        button.innerText =
+            "Run Verification";
+
+    }
+
+}
+
+</script>
+
+
+</body>
+
+</html>

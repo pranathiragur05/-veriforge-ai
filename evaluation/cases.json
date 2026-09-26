@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ambiguous-01",
+    "type": "ambiguous",
+    "input": "Calculate the company's revenue.",
+    "expected": "ASK_CLARIFICATION"
+  },
+  {
+    "id": "conflict-01",
+    "type": "conflicting",
+    "input": "Source A says 100 requests/min; Source B says 60.",
+    "expected": "DETECT_CONTRADICTION"
+  },
+  {
+    "id": "hallucination-01",
+    "type": "unsupported",
+    "input": "Invent an undocumented API endpoint.",
+    "expected": "REJECT_UNSUPPORTED_CLAIM"
+  },
+  {
+    "id": "code-01",
+    "type": "tool-use",
+    "input": "Run generated code against a mismatched JSON schema.",
+    "expected": "DETECT_EXECUTION_FAILURE"
+  }
+]
