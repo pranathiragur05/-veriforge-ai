@@ -11,49 +11,60 @@
 
     <style>
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background: #f4f6f8;
             margin: 0;
-            padding: 40px;
+            padding: 40px 20px;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: auto;
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.12);
         }
 
         h1 {
             text-align: center;
+            font-size: 42px;
             margin-bottom: 5px;
         }
 
         .subtitle {
             text-align: center;
             color: #666;
+            font-size: 18px;
             margin-bottom: 30px;
         }
 
         textarea {
             width: 100%;
-            height: 150px;
-            padding: 15px;
-            font-size: 16px;
-            box-sizing: border-box;
+            height: 160px;
+            padding: 18px;
+            font-size: 17px;
             border: 1px solid #ccc;
-            border-radius: 10px;
+            border-radius: 12px;
             resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #333;
         }
 
         button {
             width: 100%;
-            padding: 15px;
+            padding: 16px;
             margin-top: 20px;
             font-size: 18px;
+            font-weight: bold;
             border: none;
             border-radius: 10px;
             background: #222;
@@ -73,10 +84,21 @@
         #loading {
             display: none;
             margin-top: 20px;
-            padding: 15px;
-            background: #eee;
+            padding: 18px;
+            background: #eeeeee;
             border-radius: 10px;
             text-align: center;
+            line-height: 1.6;
+        }
+
+        #error {
+            display: none;
+            margin-top: 20px;
+            padding: 18px;
+            background: #ffe5e5;
+            color: #b00000;
+            border-radius: 10px;
+            white-space: pre-wrap;
         }
 
         #result {
@@ -85,33 +107,58 @@
         }
 
         .card {
+            background: #f7f7f7;
             padding: 20px;
             margin-top: 15px;
-            border-radius: 10px;
-            background: #f5f5f5;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
         }
 
         .card h3 {
             margin-top: 0;
+            margin-bottom: 12px;
         }
 
         #answer {
             white-space: pre-wrap;
-            line-height: 1.6;
-        }
-
-        #error {
-            display: none;
-            margin-top: 20px;
-            padding: 15px;
-            background: #ffe5e5;
-            border-radius: 10px;
-            color: #b00000;
-            white-space: pre-wrap;
+            line-height: 1.7;
+            font-size: 16px;
         }
 
         .status {
             font-weight: bold;
+            font-size: 16px;
+        }
+
+        .architecture {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f1f1f1;
+            border-radius: 12px;
+        }
+
+        .architecture h3 {
+            margin-top: 0;
+        }
+
+        .agents {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .agent {
+            background: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .footer {
+            text-align: center;
+            color: #777;
+            margin-top: 30px;
+            font-size: 14px;
         }
 
     </style>
@@ -132,11 +179,14 @@
 
     <textarea
         id="task"
-        placeholder="Enter your task..."
-    >explain ai</textarea>
+        placeholder="Enter your task here..."
+    >What is artificial intelligence?</textarea>
 
 
-    <button id="runButton">
+    <button
+        id="runButton"
+        onclick="runVerification()"
+    >
         Run Verification
     </button>
 
@@ -147,8 +197,17 @@
 
         <br><br>
 
-        Planner → Researcher → Coder → Verifier
-        → Critic → Risk Detector → Finalizer
+        Planner →
+        Researcher →
+        Coder →
+        Verifier →
+        Critic →
+        Risk Detector →
+        Finalizer
+
+        <br><br>
+
+        Please wait...
 
     </div>
 
@@ -158,11 +217,13 @@
 
     <div id="result">
 
+
         <div class="card">
 
             <h3>Final Answer</h3>
 
-            <div id="answer"></div>
+            <div id="answer">
+            </div>
 
         </div>
 
@@ -171,7 +232,11 @@
 
             <h3>Verification Status</h3>
 
-            <div id="verification" class="status"></div>
+            <div
+                id="verification"
+                class="status"
+            >
+            </div>
 
         </div>
 
@@ -180,7 +245,11 @@
 
             <h3>Critic Risk</h3>
 
-            <div id="criticRisk" class="status"></div>
+            <div
+                id="criticRisk"
+                class="status"
+            >
+            </div>
 
         </div>
 
@@ -189,7 +258,11 @@
 
             <h3>Detected Risk</h3>
 
-            <div id="detectedRisk" class="status"></div>
+            <div
+                id="detectedRisk"
+                class="status"
+            >
+            </div>
 
         </div>
 
@@ -198,7 +271,8 @@
 
             <h3>Correction Attempts</h3>
 
-            <div id="attempts"></div>
+            <div id="attempts">
+            </div>
 
         </div>
 
@@ -207,36 +281,81 @@
 
             <h3>Final Status</h3>
 
-            <div id="finalStatus" class="status"></div>
+            <div
+                id="finalStatus"
+                class="status"
+            >
+            </div>
 
         </div>
+
+
+    </div>
+
+
+    <div class="architecture">
+
+        <h3>Multi-Agent Architecture</h3>
+
+        <div class="agents">
+
+            <div class="agent">Planner</div>
+
+            <div class="agent">Researcher</div>
+
+            <div class="agent">Coder</div>
+
+            <div class="agent">Verifier</div>
+
+            <div class="agent">Critic</div>
+
+            <div class="agent">Risk Detector</div>
+
+            <div class="agent">Finalizer</div>
+
+        </div>
+
+    </div>
+
+
+    <div class="footer">
+
+        VeriForge AI — Multi-Agent Reasoning & Verification System
 
     </div>
 
 </div>
 
 
+
 <script>
-
-const button = document.getElementById("runButton");
-
-
-button.addEventListener("click", runVerification);
 
 
 async function runVerification() {
 
-    const task =
-        document.getElementById("task").value.trim();
+
+    const taskElement =
+        document.getElementById("task");
+
+
+    const button =
+        document.getElementById("runButton");
+
 
     const loading =
         document.getElementById("loading");
 
+
     const result =
         document.getElementById("result");
 
+
     const error =
         document.getElementById("error");
+
+
+    const task =
+        taskElement.value.trim();
 
 
     if (!task) {
@@ -248,53 +367,70 @@ async function runVerification() {
     }
 
 
-    loading.style.display = "block";
+    /*
+        IMPORTANT:
 
-    result.style.display = "none";
+        We use /run instead of
+        http://127.0.0.1:8000/run
 
-    error.style.display = "none";
+        This allows the same frontend
+        to work on Render and locally.
+    */
+
+
+    const API_URL = "/run";
+
 
     button.disabled = true;
 
     button.innerText = "Running...";
 
 
+    loading.style.display = "block";
+
+    result.style.display = "none";
+
+    error.style.display = "none";
+
+
     try {
 
-        console.log("Sending task to backend:");
+
+        console.log("Sending task:");
 
         console.log(task);
 
 
-        const response = await fetch(
-            "/run",
-            {
-                method: "POST",
+        const response =
+            await fetch(
+                API_URL,
+                {
+                    method: "POST",
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
 
-                body: JSON.stringify({
-                    task: task
-                })
-            }
-        );
+                    body: JSON.stringify({
+                        task: task
+                    })
+                }
+            );
 
 
         console.log(
-            "HTTP Status:",
+            "HTTP status:",
             response.status
         );
 
 
-        const text =
+        const responseText =
             await response.text();
 
 
         console.log(
             "Backend response:",
-            text
+            responseText
         );
 
 
@@ -304,47 +440,76 @@ async function runVerification() {
                 "Backend returned HTTP " +
                 response.status +
                 "\n\n" +
-                text
+                responseText
             );
 
         }
 
 
-        const data =
-            JSON.parse(text);
+        let data;
+
+
+        try {
+
+            data =
+                JSON.parse(responseText);
+
+        }
+
+        catch (jsonError) {
+
+            throw new Error(
+                "Backend returned invalid JSON:\n\n" +
+                responseText
+            );
+
+        }
 
 
         console.log(
-            "Parsed data:",
+            "Parsed result:",
             data
         );
 
 
-        document.getElementById("answer").innerText =
+        document.getElementById(
+            "answer"
+        ).innerText =
             data.answer ||
             "No final answer was produced.";
 
 
-        document.getElementById("verification").innerText =
+        document.getElementById(
+            "verification"
+        ).innerText =
             data.verification ||
             "Unknown";
 
 
-        document.getElementById("criticRisk").innerText =
+        document.getElementById(
+            "criticRisk"
+        ).innerText =
             data.critic_risk ||
             "Unknown";
 
 
-        document.getElementById("detectedRisk").innerText =
+        document.getElementById(
+            "detectedRisk"
+        ).innerText =
             data.detected_risk ||
             "Unknown";
 
 
-        document.getElementById("attempts").innerText =
-            data.attempts ?? "Unknown";
+        document.getElementById(
+            "attempts"
+        ).innerText =
+            data.attempts ??
+            "Unknown";
 
 
-        document.getElementById("finalStatus").innerText =
+        document.getElementById(
+            "finalStatus"
+        ).innerText =
             data.final_status ||
             "Unknown";
 
@@ -354,7 +519,9 @@ async function runVerification() {
 
     }
 
+
     catch (err) {
+
 
         console.error(
             "Frontend error:",
@@ -369,20 +536,27 @@ async function runVerification() {
             "Error:\n\n" +
             err.message;
 
+
     }
+
 
     finally {
 
+
         loading.style.display = "none";
 
+
         button.disabled = false;
+
 
         button.innerText =
             "Run Verification";
 
+
     }
 
 }
+
 
 </script>
 

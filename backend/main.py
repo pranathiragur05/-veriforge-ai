@@ -1,8 +1,9 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from pathlib import Path
 
 from .orchestrator import run_task
 
@@ -13,7 +14,6 @@ app = FastAPI(
 )
 
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,34 +23,101 @@ app.add_middleware(
 )
 
 
-# Request model
 class TaskRequest(BaseModel):
+
     task: str
 
 
-# Frontend path
 BASE_DIR = Path(__file__).resolve().parent.parent
-FRONTEND_FILE = BASE_DIR / "frontend" / "index.html"
+
+FRONTEND_FILE = (
+    BASE_DIR /
+    "frontend" /
+    "index.html"
+)
 
 
-# Home page
 @app.get("/")
 def home():
-    return FileResponse(FRONTEND_FILE)
+
+    return FileResponse(
+        FRONTEND_FILE
+    )
 
 
-# Run AI verification
+@app.get("/health")
+def health():
+
+    return {
+        "status": "healthy",
+        "service": "VeriForge AI"
+    }
+
+
 @app.post("/run")
 def run(request: TaskRequest):
 
-    result = run_task(request.task)
+    result = run_task(
+        request.task
+    )
+
 
     return {
-        "task": result["task"],
-        "verification": result["verification"]["status"],
-        "critic_risk": result["critique"]["risk"],
-        "detected_risk": result["risk"]["risk"],
-        "final_status": result["final"]["status"],
-        "answer": result["final"].get("answer"),
-        "attempts": result["attempts"]
+
+        "task":
+            result.get(
+                "task",
+                request.task
+            ),
+
+        "verification":
+            result.get(
+                "verification",
+                {}
+            ).get(
+                "status",
+                "unknown"
+            ),
+
+        "critic_risk":
+            result.get(
+                "critique",
+                {}
+            ).get(
+                "risk",
+                "unknown"
+            ),
+
+        "detected_risk":
+            result.get(
+                "risk",
+                {}
+            ).get(
+                "risk",
+                "unknown"
+            ),
+
+        "final_status":
+            result.get(
+                "final",
+                {}
+            ).get(
+                "status",
+                "unknown"
+            ),
+
+        "answer":
+            result.get(
+                "final",
+                {}
+            ).get(
+                "answer"
+            ),
+
+        "attempts":
+            result.get(
+                "attempts",
+                0
+            )
+
     }
